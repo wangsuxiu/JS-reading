@@ -175,3 +175,77 @@ Object.assign(dest, {id: 'first'}, {id: 'second'}, {id: 'third'});
 // second
 // third
 
+let dest, src, result;
+
+// 覆盖属性
+dest = { id: 'desc'}
+
+
+result = Object.assign(dest, {id: 'src1', a:'foo'}, {id: 'src2', b: 'bar'});
+console.log(result);   // {id: src2, a: foo, b: bar}
+
+// 对象引用
+dest = {}
+src = { a: {}}
+
+Object.assign(dest, src)
+console.log(dest.a === src.a)  // true
+
+let dest, src, result
+
+// 错误处理
+dest = {}
+src = {
+    a: 'foo',
+    get b() {
+        // Object.assign()在调用这个获取函数时会抛出错误
+        throw new Error();
+    },
+    c: 'bar',
+}
+
+try {
+    Object.assign(dest, src)
+} catch (error) {
+    
+}
+// Object.assign()没办法回滚已经完成的修改
+// 因此在抛出错误之前，目标对象上已经完成的修改会继续存在
+console.log(dest)   // {a : foo}
+
+// 对象标识及相等判度
+// 这些情况在不同javascript引擎中表现不同，但仍被认为相等
+console.log(+0 === -0)  // true
+console.log(+0 === 0)   // true
+console.log(-0 === 0)   // true
+
+// 要确定NaN的相等性，必须使用极为讨厌的isNaN()
+console.log(NaN === NaN)  // false
+console.log(isNaN(NaN))   // true
+
+// 为改善这类情况，ECMAScript6规范新增了Object.is(),这个方法与===很像，但同时也考虑到了上述边界情形。这个方法必须接受两个参数：
+console.log(Object.is(true,1)) // false
+console.log(Object.is({}, {})) // false
+console.log(Object.is('2', 2)) // false
+
+// 正确的0，-0，+0相等/不等判定
+console.log(Object.is(+0,-0)) // false
+console.log(Object.is(+0, +0))  // true
+console.log(Object.is(-0,0))  // false
+
+// 正确的NaN判度
+console.log(Object.is(NaN)) // true
+// 要检查超过两个值，递归地利用相等性传递即可：
+function recursivelyCheckEqual(x,...rest) {
+    return Object.is(x, rest[0])&& (rest.length < 2 || recursivelyCheckEqual(...rest))
+}
+
+// 增强的对象语法
+// 简写方法名与可计算属性键相互兼容
+const methodKey = 'sayName'
+let person = {
+    [methodKey](name){
+        console.log(`my name is ${name}`)
+    }
+}
+
