@@ -657,6 +657,63 @@ friend.sayName()
 // 重写构造函数上的原型之后再创建的实例才会引用新的原型。而再此之前创建的实例仍然会引用最初的原型。
 
 
+// 原型的问题
+// 原型模式也不是没有问题。首先，他弱化了向构造函数传递初始化参数的能力，会导致所有实例默认都取得相同的属性。虽然这会带来不便，但还不是原型的最大问题。
+// 原型的主要问题源自它的共享属性。
+
+// 我们知道，原型上的所有属性是在实例间共享的，这对函数来说比较合适。另外包含原始值的属性也还好，如前面例子中所示，可以通过在实例上添加同名属性来简单地遮蔽原型上的属性。
+// 真正的问题来自包含引用值的属性，来看下面的例子：
+function Person(){}
+
+Person.prototype = {
+    constructor: Person,
+    name: 'Nicholas',
+    age:29,
+    job: 'Software Engineer',
+    friends: ["Shelby", "Court"],
+    sayName() {
+        console.log(this.name)
+    }
+}
+
+let person1 = new Person()
+let person2 = new Person()
+
+person1.friends.push('Van')
+
+console.log(persson1.friends)  // 'Shelby, Court, Van'
+console.log(person2.friends)   // 'Shelby, Court, Van'
+console.log(person1.friends === person2.friends)  // true
+
+// 继承
+// 重温一下构造函数，原型和实例的关系：每个构造函数都有一个原型对象，原型有一个属性指回构造函数，而实例有一个内部指针指向原型。如果原型是另外一个类型的实例呢？
+// 那就意味着这个原型本身有一个内部指针指向另一个原型，相应地另一个原型也有一个指针指向另一个构造函数。这样就在实例和原型之间构造了一条原型链。这就是原型链的基本构想。
+// 实现原型链涉及如下代码模式：
+function SuperType(){
+    this.property = true
+}
+
+SuperType.prototype.getSuperValue = function(){
+    return this.property
+}
+
+function SubType(){
+    this.subproperty = false
+}
+
+// 继承SuperType
+SubType.prototype = new SuperType()
+
+SubType.prototype.getSubValue =  function(){
+    return this.subproperty
+}
+let instance = new SubType()
+console.log(instance.getSuperValue())  // true
+
+// 由于SubType.prototype 的constructor属性被重写为指向SuperType，所以instance.constructor也指向SuperType。
+
+
+
 
 
 
