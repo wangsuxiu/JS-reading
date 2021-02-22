@@ -712,9 +712,138 @@ console.log(instance.getSuperValue())  // true
 
 // 由于SubType.prototype 的constructor属性被重写为指向SuperType，所以instance.constructor也指向SuperType。
 
+// 默认原型
+// 任何函数的默认原型都是一个Object的实例，这意味着这个实例有一个内部指针指向Object.prototype。这也是为什么自定义类型能够继承包括toString()，valueof()在内的
+// 所有默认方法的原因
 
 
+// 盗用构造函数
+function SuperType(){
+    this.colors = ['red', 'blue','green']
+}
+
+function SubType(){
+    // 继承SuperType
+    SuperType.call(this)
+}
+
+let instance = new SubType()
+instace.colors.push('black')
+console.log(instance.colors)   // 'red, blue, green, black'
+
+let instance1 = new SubType()
+console.log(instance1)    // "red, blue, green"
 
 
+// 组合继承(构造函数 + 原型)
+function SuperType(name){
+    this.name= name;
+    this.colors = ['red', 'blue', 'green']
+}
 
+SuperType.prototype.sayName = function(){
+    console.log(this.name)
+}
+
+function SubType(name, age){
+    // 继承属性
+    SuperType.call(this, name)
+    this.age = age
+}
+
+// 继承方法
+SubType.prototype = new SuperType()
+
+SubType.prototype.sayAge = functio(){
+    console.log(this.age)
+}
+
+let insatnce1 = new SubType('Nicholas', 29)
+instance1.colors.push('black')   // "red, blue, green, black"
+instance1.sayName()   // Nicholas
+instance1.sayAge()    // 29
+
+let instance2 = new SubType('Greg', 27)
+console.log(instance2.colors)   // "red, blue, green"
+instance2.sayName()     // Greg
+instance2.sayAge()      // 27
+
+// 原型式继承
+function object(o) {
+    function F(){}
+    F.prototype = o
+    return new F()
+}
+// 这个object函数会创建一个临时的构造函数，将传入的对象赋值给这个构造函数的原型对象，然后返回这个临时类型的一个实例
+// 本质上，object()是对传入的对象执行了一次浅复制，来看下面的例子：
+let person = {
+    name: 'Nicholas',
+    friends: ['Shelby', 'Court', 'Van']
+}
+
+let anotherPerson = object(person)
+anotherPerson.name = 'Greg'
+anotherPerson.friends.push('Rob')
+
+let yetAnotherPerson = object(person)
+yetAnotherPerson.name = 'Linda'
+yetAnotherPerson.friends.push('Barbie')
+
+console.log(person.friends)   // "Shelby, Court, Van, Rob, Barbie"
+
+// ECMAScript5通过增加Object.create()方法将原型式继承的概念规范化了。这个方法接受两个参数：
+// 作为新对象原型的对象，以及给新对象定义额外属性的对象（第二个可选），在只有一个参数时，Object.create()与这里的object()方法效果相同：
+let person = {
+    name: 'Greg',
+    friends:['Shelby', 'Court', 'Van']
+}
+
+let anotherPerson = Object.create(person)
+// ...
+
+// 寄生式继承
+function createAnother(original){
+    let clone = object(original)
+    clone.sayHi = function(){
+        console.log('hi')
+    }
+    return clone
+} 
+
+let person = {
+    name: 'Nicholas',
+    friends: ['Shelby', 'Court', 'Van']
+}
+
+let anotherPerson = createAnother(person)
+anotherPerson.sayHi()  // hi
+
+// 寄生式组合继承
+function SuperType(name){
+    this.name = name
+    this.colors = ['red', 'blue', 'green']
+}
+
+SuperType.prototype.sayName = function(){
+    console.log(this.name)
+}
+
+function SubType(name, age){
+    SuperType.call(this, name)
+    this.age = age
+}
+
+SubType.prototype = new SuperType()
+SubType.prototype.constructor = SubType
+SubType.prototype.sayAge = function(){
+    console.log(this.age)
+}
+
+// 缺点：父类构造函数调用两次
+
+function inheritPrototype(subType, superType){
+    let prototype = object(superType.prototype)
+    prototype.constructor = subType
+    subType.prototype = prototype
+}
 
